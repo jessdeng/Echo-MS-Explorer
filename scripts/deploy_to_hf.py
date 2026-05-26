@@ -81,20 +81,59 @@ def ensure_huggingface_hub() -> None:
     sys.exit(1)
 
 
+def _read_cached_token() -> str | None:
+    """Read the token from the standard cache locations.
+
+    huggingface_hub 1.x dropped the ``HfFolder`` class; the canonical
+    function is now ``huggingface_hub.get_token()``. We try that first
+    and fall back to reading the file directly so this script keeps
+    working on older versions too.
+    """
+    try:
+        from huggingface_hub import get_token  # 0.19+
+        tok = get_token()
+        if tok:
+            return tok.strip()
+    except ImportError:
+        pass
+
+    # Manual fallback: the cache file path is the same across versions
+    for path in (
+        Path.home() / ".cache" / "huggingface" / "token",
+        Path.home() / ".huggingface" / "token",
+    ):
+        if path.exists():
+            tok = path.read_text().strip()
+            if tok:
+                return tok
+    return None
+
+
+def _save_token(token: str) -> None:
+    """Persist the token to the standard cache location."""
+    cache_dir = Path.home() / ".cache" / "huggingface"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    token_path = cache_dir / "token"
+    token_path.write_text(token + "\n")
+    try:
+        token_path.chmod(0o600)
+    except OSError:
+        pass
+
+
 def get_token() -> str:
     """Token resolution order:
     1. HF_TOKEN env var
-    2. Cached token at ~/.cache/huggingface/token (huggingface_hub default)
+    2. Cached token at ~/.cache/huggingface/token
     3. Prompt the user.
     """
     env = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
     if env:
         return env.strip()
 
-    from huggingface_hub import HfFolder
-    cached = HfFolder.get_token()
+    cached = _read_cached_token()
     if cached:
-        return cached.strip()
+        return cached
 
     print()
     print("=" * 70)
@@ -110,9 +149,7 @@ def get_token() -> str:
         print("No token entered, aborting.", file=sys.stderr)
         sys.exit(1)
 
-    # Cache for future runs
-    from huggingface_hub import HfFolder as _HF
-    _HF.save_token(token)
+    _save_token(token)
     print("Token cached at ~/.cache/huggingface/token")
     return token
 
