@@ -28,13 +28,18 @@ ENV HOME=/home/app \
 
 WORKDIR /home/app/echo-ms-explorer
 
-# Install Python deps from the locked manifest first so this layer caches
-COPY --chown=app:app pyproject.toml uv.lock ./
+# Install Python deps from the locked manifest. We need to copy a few
+# things *before* `uv sync` so hatchling can build the editable install
+# of echo-ms-explorer:
+#   - pyproject.toml + uv.lock: dep graph + lockfile
+#   - README.md:                referenced from pyproject.toml's `readme`
+#   - src/:                     the actual package being installed
+COPY --chown=app:app pyproject.toml uv.lock README.md ./
+COPY --chown=app:app src/ ./src/
 RUN uv sync --frozen --no-dev
 
-# App source
+# App source (separate layer so dep installs are cached across app edits)
 COPY --chown=app:app app/ ./app/
-COPY --chown=app:app src/ ./src/
 
 # Hugging Face Spaces expects the app on port 7860
 EXPOSE 7860
