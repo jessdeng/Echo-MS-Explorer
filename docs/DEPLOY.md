@@ -1,112 +1,113 @@
 # Deploying the live demo to Hugging Face Spaces
 
-The repo includes everything needed to host a public live demo on
-Hugging Face Spaces — a `Dockerfile` and the Space-side README config
-(`docs/huggingface-space-readme.md`). This file documents the one-time
-setup.
+This repo includes a single-command deploy script: `scripts/deploy_to_hf.py`.
+You run it once, paste an access token when prompted, and it creates a
+public Space and uploads the code. Subsequent deploys are a single
+command with no prompts.
 
-## What you'll get
+## What you'll end up with
 
 A public URL like `https://huggingface.co/spaces/<your-hf-username>/echo-ms-explorer`
-that anyone can click. The app boots empty; a "Load demo data" button
-populates it with synthetic data so reviewers can explore every feature
-without uploading anything.
+that anyone can click. The app boots empty; a "Load demo data" button in
+the app populates it with synthetic data so reviewers can drive every
+feature without uploading anything.
 
-Cold-start time: ~30 s on HF's free CPU tier. After that, the Space stays
-warm for a few minutes per visit.
+Cold-start time: ~30 s on the free CPU tier. After that the Space stays
+warm for a few minutes between visits.
 
-## One-time setup (~5 minutes)
+## One-time setup
 
 ### 1. Create a Hugging Face account
-<https://huggingface.co/join> — free.
+<https://huggingface.co/join> — free, no card required.
 
-### 2. Create a new Space
-- Go to <https://huggingface.co/new-space>
-- **Owner:** your username
-- **Space name:** `echo-ms-explorer` (or whatever)
-- **License:** MIT
-- **Select the Space SDK:** **Docker** → "Blank" template
-- **Space hardware:** "CPU basic — Free"
-- **Visibility:** Public
+### 2. Create an access token
+<https://huggingface.co/settings/tokens>
 
-Click **Create Space**. Hugging Face gives you a git URL like
-`https://huggingface.co/spaces/<you>/echo-ms-explorer`.
+- Click **New token**
+- Name it `deploy` (or anything)
+- Role: **Write**
+- Click **Generate token**
+- Copy the long `hf_…` string somewhere safe — you'll paste it once.
 
-### 3. Push this repo's code to the Space
+### 3. Run the deploy script
 
 From a terminal in this repo:
 
 ```bash
-# Add the Hugging Face Space as a second git remote
-git remote add hf https://huggingface.co/spaces/<your-hf-username>/echo-ms-explorer
-
-# Copy the Space-side README config to the repo root before pushing.
-# (We keep it in docs/ so it doesn't clobber the GitHub README on main.)
-cp docs/huggingface-space-readme.md README-hf.md
-
-# Push to the Space (Hugging Face uses 'main' as the default branch)
-git push hf main
+uv run python scripts/deploy_to_hf.py
 ```
 
-When HF prompts for credentials, use your HF username and a write-scope
-**access token** from <https://huggingface.co/settings/tokens>
-(passwords aren't accepted for git over HTTPS).
+What happens:
 
-> **Note on the README:** Hugging Face requires its YAML frontmatter at
-> the top of the Space's `README.md`. We keep that frontmatter in
-> `docs/huggingface-space-readme.md` so it doesn't disrupt the GitHub
-> README. If you want HF to display a proper landing page, after the
-> first push, rename `README-hf.md` to `README.md` *inside the Space's
-> own git history only* (e.g. via the HF web UI's "Files" tab → edit
-> README.md → paste the contents). The GitHub repo's README stays
-> untouched.
+1. The script installs `huggingface_hub` if it's missing.
+2. It asks for your access token (paste it — the terminal hides what
+   you type). The token is cached at `~/.cache/huggingface/token`, so
+   you won't be asked again.
+3. It creates the Space named `echo-ms-explorer` under your account
+   (Docker SDK, public, free CPU).
+4. It uploads the repo contents (skipping `.venv`, caches, the GitHub
+   README, this `scripts/` folder, and any local exports).
+5. It uploads `docs/huggingface-space-readme.md` as the Space's
+   `README.md` so the landing page gets the right title/emoji/port.
+6. It prints the live URL and a link to the build logs.
 
-### 4. Wait for the build
+The first build takes about 3–5 minutes. When the status badge on the
+Space flips from "Building" to "Running", the demo is live.
 
-Hugging Face will see the `Dockerfile`, build the image (~3–5 min the
-first time), and start the container. Watch progress on the Space's
-"Logs" tab.
+### 4. Link the live demo URL from the GitHub README
 
-When the status flips to **Running**, the demo URL is live.
-
-### 5. Add the demo URL to the GitHub README
-
-Replace `<LIVE_DEMO_URL>` in the GitHub `README.md` badge with your
-actual Space URL, then commit + push:
+The GitHub `README.md` has a placeholder `<LIVE_DEMO_URL>` in the
+"Try it" section. Once the Space is up, replace it:
 
 ```bash
 sed -i '' 's|<LIVE_DEMO_URL>|https://huggingface.co/spaces/<you>/echo-ms-explorer|g' README.md
-git add README.md && git commit -m "Link live demo on Hugging Face Spaces"
-git push origin main
+git add README.md && git commit -m "Link the live demo URL" && git push
 ```
 
 ## Updating the deployment
 
-Every push to the `hf` remote rebuilds the Space:
+Re-run the same command after any code change:
 
 ```bash
-git push hf main
+uv run python scripts/deploy_to_hf.py
 ```
 
-If you want HF to auto-sync from GitHub on every push (so you only ever
-have to `git push origin main`), enable "GitHub Sync" in your Space's
-Settings → Repository.
+It re-uses the cached token, pushes only changed files, and triggers
+a rebuild of the Space.
 
 ## Resource limits on the free tier
 
-- **RAM:** 16 GB on free CPU (generous — large mzMLs are fine)
+- **RAM:** 16 GB on free CPU (generous — large mzMLs work fine)
 - **Storage:** 50 GB ephemeral
 - **Concurrent users:** ~3 before the Space queues
-- **Sleeps:** the Space goes to sleep after ~48 h of no traffic. Next
-  visit will trigger a ~30 s cold start.
+- **Sleeps:** ~48 h of no traffic puts the Space to sleep; next visit
+  triggers a ~30 s cold start.
 
 ## Troubleshooting
 
-- **Build fails on `uv sync`** — check that `uv.lock` is committed and
-  in sync with `pyproject.toml`. Run `uv sync` locally first.
-- **App crashes on load** — open the Space's "Logs" tab; tracebacks
-  appear there. Most common cause is a missing system lib for `lxml`;
-  the `Dockerfile` already installs the necessary `libxml2` /
-  `libxslt1.1` packages.
-- **Demo button does nothing** — the synthetic dataset takes ~1 s to
-  generate on first click; subsequent clicks are instant.
+**Script complains that the token didn't authenticate.**
+Delete the cached token and try again:
+
+```bash
+rm ~/.cache/huggingface/token
+uv run python scripts/deploy_to_hf.py
+```
+
+Make sure the token has the **Write** role, not just **Read**.
+
+**Build fails on `uv sync`.**
+The `Dockerfile` expects `uv.lock` to be committed and in sync with
+`pyproject.toml`. Run `uv sync` locally first and commit any
+`uv.lock` changes.
+
+**App crashes on first load.**
+Open the Space's "Logs" tab; tracebacks appear there. Most common
+cause is a missing system lib for `lxml` — but the `Dockerfile`
+already installs `libxml2` / `libxslt1.1`, so this should be rare.
+
+**Demo button does nothing for ~1 second.**
+That's expected: the synthetic dataset takes a moment to generate on
+the first click. Subsequent clicks are instant.
+
+**The Space loads but the app shows "Awaiting file".**
+Click the "Load demo data" button in the app's top panel.
