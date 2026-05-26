@@ -1,0 +1,45 @@
+[project]
+name = "echo-ms-explorer"
+version = "0.1.0"
+description = "Interactive viewer for SCIEX Echo MS acoustic ejection data — assigns TIC peaks to wells and lets you inspect XICs and mass spectra per well."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Jessie F. Deng" },
+]
+license = { text = "MIT" }
+keywords = ["mass-spectrometry", "echo-ms", "acoustic-ejection", "sciex", "metabolomics"]
+
+dependencies = [
+    "pyteomics>=4.6",
+    "pynumpress>=0.0.8",
+    "lxml>=4.9",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "plotly>=5.18",
+    "shiny>=0.10",
+    "shinywidgets>=0.3",
+    "libsass>=0.22",
+    "pywebview>=5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.3",
+]
+
+[project.urls]
+Repository = "https://github.com/jessdeng/echo-ms-explorer"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/echo_ms_explorer"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

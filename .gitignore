@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+.uv/
+
+# uv — uv.lock IS committed for reproducible installs
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Project-specific
+data/raw/
+data/cache/
+*.mzML
+*.wiff
+*.wiff2
+*.wiff.scan
+!data/examples/*.mzML
+
+# App runtime artefacts (launcher logs + port file)
+.server.log
+.server-port
+exports/
+
+# Finder duplicates (macOS adds "2.", "3." copies on rename collisions)
+* 2.*
+* 3.*
+" *.lock"
+".server *.log"
+".server-port *"
+
+# mzML index sidecars created on first load
+*.mzML.idx.npz
+
+# Claude Code / preview tooling
+.claude/launch.json
+.claude/settings.local.json
