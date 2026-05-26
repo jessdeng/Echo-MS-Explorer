@@ -166,6 +166,21 @@ app_ui = ui.page_fluid(
                 ),
                 ui.column(2, ui.output_ui("file_status")),
             ),
+            ui.tags.p(
+                "No mzML on hand? ",
+                ui.input_action_button(
+                    "load_demo",
+                    "Load demo data",
+                    class_="btn-primary btn-sm",
+                ),
+                "  Loads a synthetic 60-injection Echo MS run, "
+                "pre-selects wells A1–A20 with 3 interleaved replicates, "
+                "and sets reasonable peak-detection parameters.",
+                style=(
+                    "margin-top: 0.4rem; margin-bottom: 0; "
+                    "font-size: 0.82rem; color: var(--app-secondary);"
+                ),
+            ),
             class_="panel",
         ),
 
@@ -636,6 +651,69 @@ def server(input: Inputs, output: Outputs, session: Session):
             )
             file_load_error.set(f"{type(e).__name__}: {e}")
             parsed_data.set(None)
+
+    # --- Demo data button ---
+    @reactive.Effect
+    @reactive.event(input.load_demo)
+    async def _load_demo():
+        """Populate the app with synthetic Echo MS data so first-time
+        visitors can explore every feature without uploading anything."""
+        import asyncio
+
+        from echo_ms_explorer import generate_demo_data
+        from echo_ms_explorer.demo import (
+            DEMO_BASELINE_CPS,
+            DEMO_MIN_SPACING_SEC,
+            DEMO_N_REPLICATES,
+            DEMO_PEAK_WIDTH_SEC,
+            DEMO_REPLICATE_PATTERN,
+            DEMO_RT_END_MIN,
+            DEMO_RT_START_MIN,
+            DEMO_WELLS,
+        )
+
+        # 1. Push every input update we need BEFORE the parsed-data
+        # change so the client round-trip can start ASAP.
+        ui.update_numeric("n_replicates", value=DEMO_N_REPLICATES)
+        ui.update_radio_buttons(
+            "replicate_pattern", selected=DEMO_REPLICATE_PATTERN,
+        )
+        ui.update_numeric("rt_start_min", value=DEMO_RT_START_MIN)
+        ui.update_numeric("rt_end_min", value=DEMO_RT_END_MIN)
+        ui.update_numeric("baseline_threshold", value=DEMO_BASELINE_CPS)
+        ui.update_numeric("peak_width_sec", value=DEMO_PEAK_WIDTH_SEC)
+        ui.update_numeric("min_distance_sec", value=DEMO_MIN_SPACING_SEC)
+
+        plate_selection.set(list(DEMO_WELLS))
+        await session.send_custom_message(
+            "plate_set_selection", {"wells": DEMO_WELLS}
+        )
+
+        # 2. Set the data — this triggers the auto-detect effect, but
+        # the input updates above might not have round-tripped yet so
+        # the first detection pass may use stale values. We'll
+        # re-trigger detection below once the inputs settle.
+        data = generate_demo_data()
+        parsed_data.set(data)
+        file_name.set("demo_synthetic.mzML")
+        file_load_error.set("")
+
+        # 3. Wait long enough for the server <-> client round-trip,
+        # then run the detection again with the now-current inputs.
+        await asyncio.sleep(0.6)
+        try:
+            _run_detection_and_populate_cache()
+        except Exception as exc:
+            print(
+                f"Demo detection failed: {type(exc).__name__}: {exc}",
+                file=sys.stderr,
+            )
+
+        ui.notification_show(
+            "Loaded synthetic demo data (60 injections, 2 spectral groups). "
+            "Open the XIC or Pivot Table tabs to explore.",
+            type="message", duration=8,
+        )
 
     @output
     @render.ui

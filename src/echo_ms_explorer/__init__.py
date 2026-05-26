@@ -15,6 +15,7 @@ from echo_ms_explorer.plate import (
     well_replicate_id,
 )
 from echo_ms_explorer.extract import extract_xic, extract_spectrum_at_rt
+from echo_ms_explorer.demo import generate_demo_data
 
 __version__ = "0.1.0"
 
@@ -35,4 +36,5 @@ __all__ = [
     "well_replicate_id",
     "extract_xic",
     "extract_spectrum_at_rt",
+    "generate_demo_data",
 ]

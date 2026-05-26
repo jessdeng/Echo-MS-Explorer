@@ -4,6 +4,18 @@ Interactive viewer for SCIEX Echo MS acoustic ejection data. Detects TIC peaks, 
 
 Runs as a **native desktop window** on Mac and Windows. No browser tab, no Terminal in daily use.
 
+## Try it
+
+**[→ Live demo on Hugging Face Spaces](<LIVE_DEMO_URL>)** (loads in ~30 s on first visit). Click **"Load demo data"** inside the app — a synthetic 60-injection Echo MS run loads, wells A1–A20 are pre-selected with 3 interleaved replicates and 2 spectral groups separated by a ~70 s gap, and peak detection runs automatically. From there you can drive the XIC and Pivot Table tabs to see every feature working without uploading anything.
+
+> No real proprietary data is shipped with the repo or the demo. Everything reviewers see in the live demo is generated in-memory from `src/echo_ms_explorer/demo.py`.
+
+## Screenshots
+
+| Plate + peak detection | Pivot table export |
+|---|---|
+| ![Plate selection + TIC with detected peaks](docs/screenshots/plate-and-tic.png) | ![Pivot table with XIC preview](docs/screenshots/pivot-table.png) |
+
 ## Why
 
 Echo MS produces hundreds of acoustic injections per plate. Manually figuring out which TIC peak corresponds to which well — and then digging into m/z data for each — is the bottleneck on a workflow that's supposed to be high-throughput. This tool does the well assignment automatically and gives you a clickable plate map.
@@ -92,8 +104,14 @@ echo-ms-explorer/
 │   ├── parser.py                # mzML loader (pymzml)
 │   ├── peaks.py                 # TIC peak detection
 │   ├── plate.py                 # Plate layout + serpentine over arbitrary subsets
-│   └── extract.py               # XIC and spectrum extraction
-├── tests/test_plate.py
+│   ├── extract.py               # XIC and spectrum extraction
+│   └── demo.py                  # Synthetic data for the live demo
+├── tests/                       # pytest suite (43 tests)
+├── Dockerfile                   # Container build for the Hugging Face Spaces demo
+├── docs/
+│   ├── DEPLOY.md                # Step-by-step Hugging Face Spaces deploy guide
+│   ├── huggingface-space-readme.md   # YAML config for the Space landing page
+│   └── screenshots/             # PNGs referenced from the README
 ├── pyproject.toml
 └── README.md
 ```
