@@ -499,9 +499,9 @@ app_ui = ui.page_fluid(
                                 "Sample names (Well, Sample Name — one per "
                                 "line, optional)",
                                 placeholder=(
-                                    "A1, EX35 T0\n"
-                                    "A2, EX35 T2\n"
-                                    "A3, EX35 T3\n"
+                                    "A1, Sample 1\n"
+                                    "A2, Sample 2\n"
+                                    "A3, Sample 3\n"
                                     "Wells with no entry keep their well ID."
                                     "  Replicate suffix added automatically."
                                 ),
@@ -1727,7 +1727,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         half_window = window_sec / 2.0
         n_reps = max(1, int(_last_n_reps_at_compute()))
 
-        # Sample-name overrides: {well_id: "EX35 T0"}.  Wells not listed in
+        # Sample-name overrides: {well_id: "Sample 1"}.  Wells not listed in
         # the mapping fall back to the well ID. The replicate suffix is
         # always appended automatically when n_reps > 1.
         sample_names = _parse_sample_names(
