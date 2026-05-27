@@ -6,7 +6,7 @@ Runs as a **native desktop window** on Mac and Windows. No browser tab, no Termi
 
 ## Try it
 
-**[→ Live demo on Hugging Face Spaces](<LIVE_DEMO_URL>)** (loads in ~30 s on first visit). Click **"Load demo data"** inside the app — a synthetic 60-injection Echo MS run loads, wells A1–A20 are pre-selected with 3 interleaved replicates and 2 spectral groups separated by a ~70 s gap, and peak detection runs automatically. From there you can drive the XIC and Pivot Table tabs to see every feature working without uploading anything.
+**[→ Live demo on Hugging Face Spaces](https://huggingface.co/spaces/jess-deng/echo-ms-explorer)** (loads in ~30 s on first visit). Click **"Load demo data"** inside the app — a synthetic 60-injection Echo MS run loads, wells A1–A20 are pre-selected with 3 interleaved replicates and 2 spectral groups separated by a ~70 s gap, and peak detection runs automatically. From there you can drive the XIC and Pivot Table tabs to see every feature working without uploading anything.
 
 > No real proprietary data is shipped with the repo or the demo. Everything reviewers see in the live demo is generated in-memory from `src/echo_ms_explorer/demo.py`.
 
