@@ -7,12 +7,18 @@
 ###############################################################################
 FROM python:3.12-slim
 
-# System deps. lxml (used by pyteomics) needs libxml2/libxslt at runtime.
+# System deps.
+#   - libxml2 / libxslt1.1: runtime deps for lxml (used by pyteomics)
+#   - build-essential + python3-dev: needed because pynumpress and a few
+#     other deps ship sdists that have to compile against the Python
+#     headers on python:3.12-slim (no manylinux wheel for cp312 yet)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libxml2 \
         libxslt1.1 \
         ca-certificates \
+        build-essential \
+        python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv (matches the local dev toolchain)
