@@ -1,6 +1,6 @@
 # echo-ms-explorer
 
-Interactive viewer for SCIEX Echo MS acoustic ejection data. Detects TIC peaks, assigns them to wells using an interactive plate selector (handles the serpentine S-pattern over arbitrary subsets), and lets you inspect TIC, XIC, and mass spectra per well.
+Interactive viewer and peak picker for SCIEX Echo MS acoustic ejection data. Detects TIC peaks, assigns them to wells using an interactive plate selector (handles the serpentine S-pattern over arbitrary subsets), and lets you inspect TIC, XIC, and mass spectra per well.
 
 Runs as a **native desktop window** on Mac and Windows. No browser tab, no Terminal in daily use.
 
